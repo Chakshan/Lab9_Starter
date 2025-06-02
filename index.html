@@ -47,6 +47,13 @@
       width: 122px;
     }
   </style>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "078c8cfe94554a518467d3f3180a781f"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>
 </head>
 
 <body>
@@ -85,23 +92,80 @@
       <button>Console Trace</button>
       <button>Trigger a Global Error</button>
     </section>
-  </main>
 
+  </main>
   <script>
+    TrackJS.track('Testing TrackJS!');
+
+    class DivideByZeroError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = "DivideByZeroError"
+      }
+    }
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      let output = document.querySelector('output');
-      let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
-      let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      try {
+        let output = document.querySelector('output');
+        let firstNum = document.querySelector('#first-num').value;
+        let secondNum = document.querySelector('#second-num').value;
+        let operator = document.querySelector('#operator').value;
+        // Check for divide by 0
+        if (Number(secondNum) === 0 && operator === '/') {
+          throw new DivideByZeroError('Invalid request')
+        }
+        output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      } catch (err) {
+        if (err instanceof TypeError) {
+          console.error('A type error occured. Could not perform calculation!')
+          console.error(err);
+        } else if (err instanceof DivideByZeroError) {
+          console.error('Cannot divide by zero! Could not perform calculation!');
+          console.error(err);
+        } else {
+          console.error('Could not perform the calculation!');
+          throw err;
+        }
+      } finally {
+        console.log("Form was submitted!")
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
+    errorBtns[0].addEventListener("click", () => console.log('Console Log Demo'));
+    errorBtns[1].addEventListener("click", () => console.error('Console Error Demo'));
+    errorBtns[2].addEventListener("click", () => console.count('Count Button'));
+    errorBtns[3].addEventListener("click", () => console.warn('Console Warn Demo'));
+    errorBtns[4].addEventListener("click", () => console.assert(3 > 5, '3 is supposed to be less than 5'));
+    errorBtns[5].addEventListener("click", () => console.clear());
+    errorBtns[6].addEventListener("click", () => console.dir(errorBtns[6]));
+    errorBtns[7].addEventListener("click", () => console.dirxml(errorBtns[7]));
+    errorBtns[8].addEventListener("click", () => console.group("console.group"));
+    errorBtns[9].addEventListener("click", () => console.groupEnd("console.group"));
+    errorBtns[10].addEventListener("click", () => console.table([
+      { item: 'apple', count: 3, },
+      { item: 'banana', count: 5, },
+      { item: 'orange', count: 2, }
+    ]));
+    errorBtns[11].addEventListener("click", () => console.time('Timer Button'));
+    errorBtns[12].addEventListener("click", () => console.timeEnd('Timer Button'));
 
-    // Start your code here
-    // You may move this JS to another file if you wish
+    function f1() { f2(); }
+    function f2() { f3(); }
+    function f3() { console.trace(); }
+
+    errorBtns[13].addEventListener("click", f1);
+
+    errorBtns[14].addEventListener("click", () => {
+      throw Error('Global Error!');
+    });
+
+    window.onerror = function(message, url, line, col, error) {
+      console.log(`ONERROR got: ${message} at ${line}:${col} of ${url}`)
+    };
+
   </script>
 </body>
 
